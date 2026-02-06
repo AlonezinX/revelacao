@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Um Presente de Deus</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;500;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --bg-bege: #f7f3ed;
+            --accent-bege: #e5ddd3;
+            --text-main: #5d574f;
+        }
+
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: var(--bg-bege);
+            color: var(--text-main);
+            overflow: hidden;
+            margin: 0;
+        }
+
+        .font-serif { font-family: 'Playfair Display', serif; }
+
+        /* Elementos Flutuantes Suaves */
+        .floating { position: fixed; pointer-events: none; z-index: 0; opacity: 0.25; animation: floatAround 20s infinite linear; }
+        @keyframes floatAround {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(15px, 30px) rotate(3deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
+        }
+
+        .fade-step { display: none; animation: fadeIn 1.5s ease forwards; }
+        .fade-step.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Botão de Segurar (Suspense) */
+        .hold-container {
+            width: 140px;
+            height: 140px;
+            margin: 0 auto;
+            position: relative;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .hold-ring {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            border: 3px solid var(--accent-bege);
+            border-radius: 50%;
+        }
+        #hold-progress {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            border: 5px solid #b5a48d;
+            border-radius: 50%;
+            clip-path: inset(100% 0 0 0);
+            transition: clip-path 0.1s linear;
+        }
+        .heart-btn {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2.5rem;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.15); }
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(12px);
+            border-radius: 40px;
+            border: 1px solid white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+        }
+
+        .glow-text {
+            text-shadow: 0 0 20px rgba(255,255,255,1);
+            animation: textReveal 2.5s ease-out forwards;
+        }
+        @keyframes textReveal { 
+            from { letter-spacing: 12px; filter: blur(8px); opacity: 0; } 
+            to { letter-spacing: 2px; filter: blur(0); opacity: 1; } 
+        }
+
+        .btn-choice {
+            background: white;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+        .btn-choice:hover { transform: translateY(-3px); border-color: var(--accent-bege); }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-6">
+
+    <div class="floating text-4xl" style="top: 15%; left: 10%;">👼</div>
+    <div class="floating text-3xl" style="bottom: 15%; right: 10%;">🙏</div>
+    <div class="floating text-2xl" style="top: 20%; right: 15%;">🤍</div>
+
+    <main class="relative z-10 w-full max-w-xl text-center">
+        
+        <div id="step-1" class="fade-step active">
+            <span class="text-xs tracking-[0.4em] uppercase opacity-50">Bem-vindos</span>
+            <h1 class="font-serif text-4xl md:text-5xl mt-4 mb-6">Um plano perfeito de Deus...</h1>
+            <p class="mb-10 opacity-70 italic leading-relaxed">
+                "Antes de formá-lo no ventre, eu o escolhi." <br>
+                Estamos prestes a descobrir o que Deus preparou para nós.
+            </p>
+            <button onclick="changeStep(2)" class="px-12 py-4 bg-white rounded-full shadow-sm hover:shadow-md transition-all uppercase tracking-[0.2em] text-[10px] font-bold">Ver o Milagre</button>
+        </div>
+
+        <div id="step-2" class="fade-step">
+            <h2 class="font-serif text-2xl mb-2">O que você acha?</h2>
+            <p class="text-xs opacity-50 mb-8 uppercase tracking-widest">Siga o seu coração</p>
+            <div class="grid grid-cols-2 gap-4 mb-8">
+                <button onclick="recordGuess('menino')" class="btn-choice p-8 rounded-[2.5rem] shadow-sm">
+                    <span class="block text-4xl mb-3">👦</span>
+                    <span class="text-[10px] uppercase font-bold tracking-widest">Um Menino</span>
+                </button>
+                <button onclick="recordGuess('menina')" class="btn-choice p-8 rounded-[2.5rem] shadow-sm">
+                    <span class="block text-4xl mb-3">👧</span>
+                    <span class="text-[10px] uppercase font-bold tracking-widest">Uma Menina</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="step-3" class="fade-step">
+            <h2 class="font-serif text-xl mb-6">Mantenha o coração pressionado para <br> confirmar a revelação...</h2>
+            <div class="hold-container" id="hold-trigger" onmousedown="startHold()" onmouseup="endHold()" ontouchstart="startHold()" ontouchend="endHold()">
+                <div class="hold-ring"></div>
+                <div id="hold-progress"></div>
+                <div class="heart-btn">🤍</div>
+            </div>
+            <p id="hold-msg" class="mt-8 text-[10px] uppercase tracking-[0.3em] opacity-40 animate-pulse">Não solte, sinta a benção...</p>
+        </div>
+
+        <div id="step-4" class="fade-step">
+            <div class="mb-6">
+                <svg class="animate-spin h-8 w-8 mx-auto text-[#b5a48d]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </div>
+            <p id="loading-text" class="italic opacity-60 text-sm">O tempo de Deus é perfeito...</p>
+        </div>
+
+        <div id="step-5" class="fade-step">
+            <p class="text-[10px] uppercase tracking-[0.5em] mb-4 opacity-40">O milagre em</p>
+            <div id="count" class="font-serif text-9xl">3</div>
+        </div>
+
+        <div id="step-6" class="fade-step">
+            <div id="final-card" class="glass-card p-12 transition-all duration-1000">
+                <p id="pre-name" class="text-[10px] uppercase tracking-[0.4em] mb-4 opacity-60"></p>
+                <h3 id="result-text" class="font-serif text-4xl md:text-5xl mb-6 glow-text tracking-tighter"></h3>
+                <p id="result-msg" class="text-sm opacity-80 leading-relaxed font-medium"></p>
+                <div class="mt-8 text-xl">✨</div>
+            </div>
+            <button onclick="location.reload()" class="mt-12 text-[9px] uppercase tracking-widest opacity-30 hover:opacity-100 transition-opacity">Reiniciar Experiência</button>
+        </div>
+
+    </main>
+
+    <script>
+        // CONFIGURAÇÃO: Altere para 'menino' ou 'menina'
+        const RESULTADO_REAL = 'menina'; 
+
+        function changeStep(n) {
+            document.querySelectorAll('.fade-step').forEach(el => el.classList.remove('active'));
+            document.getElementById(`step-${n}`).classList.add('active');
+        }
+
+        function recordGuess(choice) {
+            // Apenas para dar a sensação de que o sistema registrou o palpite
+            changeStep(3);
+        }
+
+        // Lógica de Segurar o Botão
+        let holdTimer;
+        let holdValue = 0;
+        const progress = document.getElementById('hold-progress');
+
+        function startHold() {
+            holdTimer = setInterval(() => {
+                holdValue += 1.5;
+                progress.style.clipPath = `inset(${100 - holdValue}% 0 0 0)`;
+                if (holdValue >= 100) {
+                    clearInterval(holdTimer);
+                    processLoading();
+                }
+            }, 30);
+        }
+
+        function endHold() {
+            clearInterval(holdTimer);
+            if (holdValue < 100) {
+                holdValue = 0;
+                progress.style.clipPath = `inset(100% 0 0 0)`;
+            }
+        }
+
+        // Fase de "Enrolação" com mensagens de fé
+        function processLoading() {
+            changeStep(4);
+            const msgs = [
+                "Preparando o coração...",
+                "Deus cuidou de cada detalhe...",
+                "O segredo está sendo revelado...",
+                "Prepare o sorriso e a oração..."
+            ];
+            let i = 0;
+            const interval = setInterval(() => {
+                document.getElementById('loading-text').innerText = msgs[i];
+                i++;
+                if (i >= msgs.length) {
+                    clearInterval(interval);
+                    startCount();
+                }
+            }, 1800);
+        }
+
+        function startCount() {
+            changeStep(5);
+            let c = 3;
+            const timer = setInterval(() => {
+                c--;
+                document.getElementById('count').innerText = (c > 0) ? c : "!";
+                if (c <= 0) {
+                    clearInterval(timer);
+                    reveal();
+                }
+            }, 1000);
+        }
+
+        function reveal() {
+            changeStep(6);
+            const card = document.getElementById('final-card');
+            const text = document.getElementById('result-text');
+            const msg = document.getElementById('result-msg');
+            const pre = document.getElementById('pre-name');
+
+            if (RESULTADO_REAL === 'menino') {
+                card.style.backgroundColor = 'rgba(162, 210, 255, 0.25)';
+                pre.innerText = 'Nosso amado filho';
+                text.innerText = 'CARLOS ANTHONY';
+                text.style.color = '#79addc';
+                msg.innerText = 'Um presente de Deus enviado para ser luz, força e alegria em nossas vidas. Que o Senhor guie cada passo do nosso Anthony.';
+                celebrate('#a2d2ff');
+            } else {
+                card.style.backgroundColor = 'rgba(255, 175, 204, 0.25)';
+                pre.innerText = 'Nossa amada filha';
+                text.innerText = 'AYLLA BEATRIZ';
+                text.style.color = '#ff8fab';
+                msg.innerText = 'Uma benção pura, enviada por Deus para encher nossa casa de doçura e graça. Que a Aylla cresça sob a proteção do Pai.';
+                celebrate('#ffafcc');
+            }
+        }
+
+        function celebrate(color) {
+            const end = Date.now() + (3 * 1000);
+            const colors = [color, '#ffffff', '#e5ddd3'];
+
+            (function frame() {
+                confetti({
+                    particleCount: 2,
+                    angle: 60,
+                    spread: 55,
+                    origin: { x: 0 },
+                    colors: colors
+                });
+                confetti({
+                    particleCount: 2,
+                    angle: 120,
+                    spread: 55,
+                    origin: { x: 1 },
+                    colors: colors
+                });
+
+                if (Date.now() < end) {
+                    requestAnimationFrame(frame);
+                }
+            }());
+        }
+    </script>
+</body>
+</html>

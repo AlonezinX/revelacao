@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Um Presente de Deus</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;500;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+
+    <style>
+        :root { --bg-bege: #f7f3ed; --accent-bege: #e5ddd3; --text-main: #5d574f; }
+        body { font-family: 'Quicksand', sans-serif; background-color: var(--bg-bege); color: var(--text-main); overflow-x: hidden; margin: 0; }
+        .font-serif { font-family: 'Playfair Display', serif; }
+        .fade-step { display: none; animation: fadeIn 1.2s ease forwards; }
+        .fade-step.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Botão de Segurar */
+        .hold-container { width: 140px; height: 140px; margin: 0 auto; position: relative; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        .hold-ring { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 3px solid var(--accent-bege); border-radius: 50%; }
+        #hold-progress { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 5px solid #b5a48d; border-radius: 50%; clip-path: inset(100% 0 0 0); transition: clip-path 0.1s linear; }
+        .heart-btn { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 2.5rem; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { transform: translate(-50%, -50%) scale(1); } 50% { transform: translate(-50%, -50%) scale(1.1); } }
+
+        .glass-card { background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(12px); border-radius: 40px; border: 1px solid white; box-shadow: 0 10px 30px rgba(0,0,0,0.03); }
+        .glow-text { text-shadow: 0 0 15px rgba(255,255,255,1); animation: textReveal 2.5s ease-out forwards; }
+        @keyframes textReveal { from { letter-spacing: 10px; filter: blur(8px); opacity: 0; } to { letter-spacing: 1px; filter: blur(0); opacity: 1; } }
+        
+        .voted { border-color: #b5a48d !important; background: #eeeae4 !important; opacity: 0.8; }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-6">
+
+    <main class="relative z-10 w-full max-w-xl text-center">
+        
+        <div id="step-1" class="fade-step active">
+            <h1 class="font-serif text-4xl mb-6">Um plano perfeito de Deus...</h1>
+            <p class="mb-10 opacity-70 italic">"Os filhos são herança do Senhor, uma recompensa que ele dá."</p>
+            <button onclick="changeStep(2)" class="px-12 py-4 bg-white rounded-full shadow-sm uppercase tracking-widest text-[10px] font-bold">Ver o Milagre</button>
+        </div>
+
+        <div id="step-2" class="fade-step">
+            <h2 class="font-serif text-2xl mb-8">Qual o seu palpite?</h2>
+            <div class="grid grid-cols-2 gap-4 mb-8">
+                <button id="btn-menino" onclick="vote('menino')" class="bg-white p-8 rounded-[2.5rem] shadow-sm transition-all border-2 border-transparent">
+                    <span class="block text-4xl mb-3">👦</span>
+                    <span class="text-[10px] uppercase font-bold">Menino</span>
+                    <div id="votos-menino" class="text-xs mt-2 opacity-50">Carregando...</div>
+                </button>
+                <button id="btn-menina" onclick="vote('menina')" class="bg-white p-8 rounded-[2.5rem] shadow-sm transition-all border-2 border-transparent">
+                    <span class="block text-4xl mb-3">👧</span>
+                    <span class="text-[10px] uppercase font-bold">Menina</span>
+                    <div id="votos-menina" class="text-xs mt-2 opacity-50">Carregando...</div>
+                </button>
+            </div>
+            <p id="vote-msg" class="text-[9px] uppercase tracking-widest opacity-40">Você só pode votar uma vez</p>
+        </div>
+
+        <div id="step-3" class="fade-step">
+            <h2 class="font-serif text-xl mb-6">Mantenha pressionado para <br> confirmar a revelação...</h2>
+            <div class="hold-container" id="hold-trigger" onmousedown="startHold()" onmouseup="endHold()" ontouchstart="startHold()" ontouchend="endHold()">
+                <div class="hold-ring"></div>
+                <div id="hold-progress"></div>
+                <div class="heart-btn">🤍</div>
+            </div>
+        </div>
+
+        <div id="step-4" class="fade-step">
+            <div class="animate-spin text-2xl mb-4">✨</div>
+            <p id="loading-text" class="italic opacity-60 text-sm font-serif">O tempo de Deus é perfeito...</p>
+        </div>
+
+        <div id="step-5" class="fade-step">
+            <div id="count" class="font-serif text-9xl">3</div>
+        </div>
+
+        <div id="step-6" class="fade-step">
+            <div id="final-card" class="glass-card p-10 transition-all duration-1000">
+                <p id="pre-name" class="text-[10px] uppercase tracking-widest mb-4 opacity-60"></p>
+                <h3 id="result-text" class="font-serif text-4xl mb-6 glow-text"></h3>
+                <p id="result-msg" class="text-sm italic mb-6"></p>
+                
+                <div class="border-t border-black/5 pt-6">
+                    <p id="joke-text" class="text-xs font-bold uppercase tracking-tighter text-red-800/60"></p>
+                </div>
+            </div>
+            <button onclick="location.reload()" class="mt-10 text-[9px] opacity-30 uppercase tracking-widest">Reiniciar</button>
+        </div>
+
+    </main>
+
+    <script>
+        // === CONFIGURAÇÃO FIREBASE (Substitua pelos seus dados) ===
+        const firebaseConfig = {
+  apiKey: "AIzaSyD_iOMqZvrhDD7WNkzPrdn9NLLQ5JIPh_s",
+  authDomain: "charevelacao-89d8d.firebaseapp.com",
+  projectId: "charevelacao-89d8d",
+  storageBucket: "charevelacao-89d8d.firebasestorage.app",
+  messagingSenderId: "974632974662",
+  appId: "1:974632974662:web:6fc87b1093d46b7c844d47"
+};
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // === CONFIGURAÇÃO DO RESULTADO ===
+        const RESULTADO_REAL = 'menina'; 
+
+        // Monitorar Votos em Tempo Real
+        db.ref('votos').on('value', (snapshot) => {
+            const data = snapshot.val() || { menino: 0, menina: 0 };
+            document.getElementById('votos-menino').innerText = data.menino + " Votos";
+            document.getElementById('votos-menina').innerText = data.menina + " Votos";
+        });
+
+        function changeStep(n) {
+            document.querySelectorAll('.fade-step').forEach(el => el.classList.remove('active'));
+            document.getElementById(`step-${n}`).classList.add('active');
+        }
+
+        function vote(choice) {
+            if (localStorage.getItem('jaVotou')) {
+                alert("Você já deixou seu palpite! Mas vamos continuar...");
+                changeStep(3);
+                return;
+            }
+
+            // Salva no Firebase
+            db.ref('votos/' + choice).transaction((current) => (current || 0) + 1);
+            localStorage.setItem('jaVotou', 'true');
+            
+            document.getElementById('btn-' + choice).classList.add('voted');
+            setTimeout(() => changeStep(3), 1000);
+        }
+
+        // Lógica de Segurar
+        let holdTimer, holdValue = 0;
+        const progress = document.getElementById('hold-progress');
+
+        function startHold() {
+            holdTimer = setInterval(() => {
+                holdValue += 2;
+                progress.style.clipPath = `inset(${100 - holdValue}% 0 0 0)`;
+                if (holdValue >= 100) { clearInterval(holdTimer); processLoading(); }
+            }, 40);
+        }
+        function endHold() { 
+            clearInterval(holdTimer); 
+            if (holdValue < 100) { holdValue = 0; progress.style.clipPath = `inset(100% 0 0 0)`; }
+        }
+
+        function processLoading() {
+            changeStep(4);
+            const msgs = ["Sintonizando o milagre...", "Deus está escrevendo...", "Quase lá..."];
+            let i = 0;
+            const interval = setInterval(() => {
+                document.getElementById('loading-text').innerText = msgs[i] || "Prepare o coração...";
+                i++;
+                if (i > 3) { clearInterval(interval); startCount(); }
+            }, 2000);
+        }
+
+        function startCount() {
+            changeStep(5);
+            let c = 3;
+            const t = setInterval(() => {
+                c--;
+                document.getElementById('count').innerText = c;
+                if (c <= 0) { clearInterval(t); reveal(); }
+            }, 1000);
+        }
+
+        function reveal() {
+            changeStep(6);
+            const card = document.getElementById('final-card');
+            const text = document.getElementById('result-text');
+            const msg = document.getElementById('result-msg');
+            const joke = document.getElementById('joke-text');
+
+            if (RESULTADO_REAL === 'menino') {
+                card.style.backgroundColor = 'rgba(162, 210, 255, 0.2)';
+                text.innerText = 'CARLOS ANTHONY';
+                text.style.color = '#79addc';
+                msg.innerText = 'Um presente de Deus enviado para ser força e alegria em nossas vidas.';
+                joke.innerText = '⚠️ AVISO: Já vão preparando o estoque de energia e chuteiras, porque esse garoto vai dar trabalho! ⚽';
+                celebrate('#a2d2ff');
+            } else {
+                card.style.backgroundColor = 'rgba(255, 175, 204, 0.2)';
+                text.innerText = 'AYLLA BEATRIZ';
+                text.style.color = '#ff8fab';
+                msg.innerText = 'Uma benção pura enviada por Deus para encher nossa casa de doçura.';
+                joke.innerText = '⚠️ AVISO: Podem ir preparando os bolsos (e o limite do cartão), pois sou uma menina muito cara e cheia de laços! 🎀💸';
+                celebrate('#ffafcc');
+            }
+        }
+
+        function celebrate(color) {
+            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: [color, '#ffffff'] });
+        }
+    </script>
+</body>
+</html>
